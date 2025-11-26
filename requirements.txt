@@ -1,0 +1,6 @@
+streamlit
+bertopic
+umap-learn
+pandas
+matplotlib
+plotly

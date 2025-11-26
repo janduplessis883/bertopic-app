@@ -1,0 +1,24 @@
+[theme]
+font="Inter:https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+
+base="light"
+primaryColor="#991b1b"
+backgroundColor="#fafafa"
+secondaryBackgroundColor="#f5f5f5"
+fontColor="#171717"
+baseRadius="medium"
+
+redColor = "#991b1b"
+orangeColor = "#ea580c"
+yellowColor = "#facc15"
+greenColor = "#65a30d"
+blueColor = "#0284c7"
+violetColor = "#db2777"
+grayColor = "#a3a3a3"
+
+[theme.sidebar]
+primaryColor="#ffffff"
+backgroundColor="#1e293b"
+secondaryBackgroundColor="#334155"
+fontColor="#f5f5f5"
+baseRadius="medium"
