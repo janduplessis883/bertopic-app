@@ -4,6 +4,7 @@ from umap import UMAP
 import pandas as pd
 import matplotlib.pyplot as plt
 import io
+from sklearn.feature_extraction.text import CountVectorizer
 
 # Title and Description
 st.title("BERTopic The App")
@@ -60,6 +61,19 @@ language = st.sidebar.selectbox(
     ["english", "multilingual"],
     index=0,
     help="Language for stopword removal"
+)
+
+# Stopword Management
+st.sidebar.subheader("Stopword Management")
+exclude_english_stopwords = st.sidebar.checkbox(
+    "Exclude English Stopwords",
+    value=True,
+    help="If checked, the default list of English stopwords will be excluded."
+)
+extra_stopwords = st.sidebar.text_area(
+    "Extra Stopwords to Exclude",
+    height=100,
+    help="Enter additional stopwords to exclude, one per line."
 )
 
 # Visualization Parameters
@@ -128,9 +142,23 @@ if documents:
         analyze_button = st.button("Start Analysis", type="primary", key="analyze_btn")
 
     if analyze_button:
+        progress_bar = st.progress(0, text="Starting analysis...")
+
         # Initialize BERTopic
-        st.header("Step 1: Initialize BERTopic")
+        st.subheader("Step 1: Initialize BERTopic")
         st.write("Initializing the BERTopic model...")
+        progress_bar.progress(10, text="Initializing UMAP and BERTopic models...")
+
+        # Stopword configuration
+        vectorizer_model = None
+        custom_stopwords = [word.strip() for word in extra_stopwords.split('\n') if word.strip()]
+
+        if exclude_english_stopwords:
+            from sklearn.feature_extraction import text
+            stop_words = text.ENGLISH_STOP_WORDS.union(custom_stopwords)
+            vectorizer_model = CountVectorizer(stop_words=list(stop_words))
+        elif custom_stopwords:
+            vectorizer_model = CountVectorizer(stop_words=custom_stopwords)
 
         # Configure UMAP with parameters from sidebar
         n_neighbors = max(2, min(n_neighbors_max, len(documents) - 2))
@@ -144,22 +172,28 @@ if documents:
         )
         topic_model = BERTopic(
             umap_model=umap_model,
+            vectorizer_model=vectorizer_model,
             verbose=False,
             min_topic_size=min_topic_size,
             language=language
         )
 
         # Fit the model
-        st.header("Step 2: Fit the Model")
+        st.subheader("Step 2: Fit the Model")
         st.write("Fitting the BERTopic model to your data...")
+        progress_bar.progress(30, text="Fitting model to your data... this may take a moment.")
+
         try:
             topics, probs = topic_model.fit_transform(documents)
         except Exception as e:
             st.error(f"Error fitting model: {e}")
+            progress_bar.empty()
             st.stop()
 
+        progress_bar.progress(100, text="Model fitting complete!")
+
         # Display Topics
-        st.header("Step 3: Extracted Topics")
+        st.subheader("Step 3: Extracted Topics")
         st.write("The following topics were extracted:")
         topic_info = topic_model.get_topic_info()
         st.dataframe(topic_info)
@@ -209,6 +243,7 @@ if documents:
                 st.warning(f"Could not generate topic frequency chart: {e}")
 
         st.success("BERTopic analysis complete!")
+        progress_bar.empty()
 else:
     if source is None:
         st.info("👆 Enter text manually or upload a CSV file to get started (minimum 3-5 documents recommended).")
